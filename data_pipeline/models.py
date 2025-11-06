@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from typing import TypedDict, Literal, Union
 import asyncio
 import json
+from pathlib import Path
 
 import httpx
 
@@ -125,6 +126,7 @@ class DataManager:
         return json.dumps(data, indent=4, ensure_ascii=False)
 
     def to_file(self, path: str):
+        Path(path).parent.mkdir(parents=True, exist_ok=True)
         with open(path, 'w', encoding="utf-8") as f:
             f.write(str(self))
 
