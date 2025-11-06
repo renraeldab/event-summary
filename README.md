@@ -13,6 +13,7 @@ event-summary/
 ├── .env.example
 ├── LICENSE
 ├── README.md
+├── models.py
 ├── data_pipeline/
 │   ├── __init__.py
 │   ├── __main__.py
