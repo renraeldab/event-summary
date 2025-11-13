@@ -4,8 +4,9 @@ import asyncio
 
 from dotenv import load_dotenv
 
-from data_pipeline.models import DataManager, Retriever
+from data_pipeline.models import DataManager, Retriever, Processor
 from data_pipeline.crawling import Metaso
+from data_pipeline.processing import DummyProcessor
 
 
 # read variables from .env
@@ -26,11 +27,16 @@ if __name__ == "__main__":
     # main
     data_manager = DataManager()
     retrievers: list[Retriever] = []
+    processors: list[Processor] = [DummyProcessor(data_manager)]
     if metaso_api_key:
         retrievers.append(Metaso(metaso_api_key, query, data_manager))  # haven't include timestamp input yet
     
     async def retrieve_all():
         await asyncio.gather(*[retriever.retrieve() for retriever in retrievers])
+        data_manager.finish_crawling()
     
-    asyncio.run(retrieve_all())
+    async def main():
+        await asyncio.gather(retrieve_all(), *[processor.run() for processor in processors])
+    
+    asyncio.run(main())
     data_manager.to_file(f"data/{query}.json")
