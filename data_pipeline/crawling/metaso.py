@@ -54,7 +54,7 @@ class Metaso(Retriever):
             self.entries.append(Webpage(
                 title=webpage["title"],
                 url=webpage["link"],
-                timestamp=_chinese_date_to_timestamp(webpage["date"]),
+                timestamp=_chinese_date_to_timestamp(webpage["date"]) if webpage.get("date") else None,
                 summary=webpage["snippet"],
                 content=webpage["content"]
             ))
