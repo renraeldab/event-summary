@@ -1,12 +1,8 @@
-from typing import Optional
-from datetime import datetime
-
 from ddgs import DDGS as DDGSSearch
 import httpx
 import trafilatura
 
 from ..models import Retriever, DataManager, Webpage
-from .utils import timestamp_valid
 
 
 class DDGS(Retriever):
@@ -25,13 +21,11 @@ class DDGS(Retriever):
         self,
         query: str,
         data_manager: DataManager,
-        start: float | None = None,
-        end: float | None = None,
         max_results: int = 10,
         max_concurrent: int = 2,
         wait_fixed: float = 0.5,
     ):
-        super().__init__(query, data_manager, start, end, max_concurrent, wait_fixed)
+        super().__init__(query, data_manager, None, None, max_concurrent, wait_fixed)
         self.max_results = max_results
 
     # ------------------------------------------------------------
@@ -62,16 +56,7 @@ class DDGS(Retriever):
             ))
 
     # ------------------------------------------------------------
-    # 2. 时间过滤阶段：异步执行
-    # ------------------------------------------------------------
-    async def _filter(self):
-        """Filter entries by timestamp range. For ddgs usually timestamp=None → keep all."""
-        for i in reversed(range(len(self.entries))):
-            if not timestamp_valid(self.entries[i]["timestamp"], self.start, self.end):
-                self.entries.pop(i)
-
-    # ------------------------------------------------------------
-    # 3. 异步 fetch：下载 HTML（不解析）
+    # 2. 异步 fetch：下载 HTML（不解析）
     # ------------------------------------------------------------
     # async def _fetch(self, client: httpx.AsyncClient, webpage: Webpage) -> Webpage:
     #     """
@@ -103,7 +88,7 @@ class DDGS(Retriever):
 
         return webpage
     # ------------------------------------------------------------
-    # 4. preprocess 阶段（同步）：用 trafilatura 提取纯文本正文
+    # 3. preprocess 阶段（同步）：用 trafilatura 提取纯文本正文
     # ------------------------------------------------------------
     def _preprocess(self, webpage: Webpage) -> Webpage:
         """

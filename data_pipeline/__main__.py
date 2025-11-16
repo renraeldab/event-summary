@@ -5,7 +5,7 @@ import asyncio
 from dotenv import load_dotenv
 
 from data_pipeline.models import DataManager, Retriever, Processor
-from data_pipeline.crawling import Metaso
+from data_pipeline.crawling import Metaso, DDGS
 from data_pipeline.processing import DummyProcessor
 
 
@@ -28,6 +28,7 @@ if __name__ == "__main__":
     data_manager = DataManager()
     retrievers: list[Retriever] = []
     processors: list[Processor] = [DummyProcessor(data_manager)]
+    retrievers.append(DDGS(query, data_manager))
     if metaso_api_key:
         retrievers.append(Metaso(metaso_api_key, query, data_manager))  # haven't include timestamp input yet
     
