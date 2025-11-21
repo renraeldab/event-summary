@@ -16,9 +16,11 @@ httpcore==1.0.9
 httpx==0.28.1
 hyperframe==6.1.0
 idna==3.11
+jinja2==3.1.6
 justext==3.0.2
 lxml==6.0.2
 lxml-html-clean==0.4.3
+markupsafe==3.0.3
 primp==0.15.0
 python-dateutil==2.9.0.post0
 python-dotenv==1.2.1
