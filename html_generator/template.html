@@ -2,27 +2,59 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Event Summary</title>
     <style>
+        body { font-family: Arial, sans-serif; max-width: 960px; margin: 20px auto; line-height: 1.6; }
+        h1 { text-align: center; }
+        .topic { border-bottom: 1px solid #ccc; padding: 16px 0; }
+        .topic h2 { margin-bottom: 8px; }
+        .card { background: #f9f9f9; padding: 10px 12px; margin: 8px 0; border-radius: 6px; }
+        .card h4 { margin: 0 0 4px 0; }
+        .small-label { font-size: 0.9rem; color: #555; }
+        a { color: #0066cc; text-decoration: none; }
+        a:hover { text-decoration: underline; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <!-- Sidebar -->
-        <div class="sidebar">
-            {% for item in data %}
-            <li>{{ item.query }}</li>
-            {% endfor %}
-        </div>
 
-        <!-- Main Content -->
-        <div class="main-content">
-            Main Content
-        </div>
+<h1>Event Summary</h1>
+
+{% for item in data %}
+<section class="topic">
+    <h2>{{ item.query }}</h2>
+
+    {% if item.output.sub_themes %}
+    <h3>Sub-themes</h3>
+    <ul>
+        {% for st in item.output.sub_themes %}
+        <li><strong>{{ st.title }}</strong>: {{ st.content }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+
+    {% if item.output.webpages %}
+    <h3>Webpages</h3>
+    {% for page in item.output.webpages %}
+    <div class="card">
+        <h4>{{ page.title }}</h4>
+
+        {% if page.url %}
+        <p class="small-label"><a href="{{ page.url }}" target="_blank">Source link</a></p>
+        {% endif %}
+
+        {% if page.summary %}
+        <p><strong>Summary:</strong> {{ page.summary }}</p>
+        {% endif %}
+
+        {% if page.content %}
+        <p><strong>Content:</strong></p>
+        <p>{{ page.content }}</p>
+        {% endif %}
     </div>
+    {% endfor %}
+    {% endif %}
+</section>
+{% endfor %}
 
-    <script>
-    </script>
 </body>
 </html>
