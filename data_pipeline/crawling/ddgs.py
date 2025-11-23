@@ -1,3 +1,5 @@
+import asyncio
+
 from ddgs import DDGS as DDGSSearch
 import httpx
 import trafilatura
@@ -21,11 +23,9 @@ class DDGS(Retriever):
         self,
         query: str,
         data_manager: DataManager,
-        max_results: int = 10,
-        max_concurrent: int = 2,
-        wait_fixed: float = 0.5,
+        max_results: int = 10
     ):
-        super().__init__(query, data_manager, None, None, max_concurrent, wait_fixed)
+        super().__init__(query, data_manager, None, None, 5, 0.1)
         self.max_results = max_results
 
     # ------------------------------------------------------------
@@ -88,9 +88,9 @@ class DDGS(Retriever):
 
         return webpage
     # ------------------------------------------------------------
-    # 3. preprocess 阶段（同步）：用 trafilatura 提取纯文本正文
+    # 3. preprocess 阶段（异步）：用 trafilatura 提取纯文本正文
     # ------------------------------------------------------------
-    def _preprocess(self, webpage: Webpage) -> Webpage:
+    async def _preprocess(self, webpage: Webpage) -> Webpage:
         """
         Extract main content using trafilatura.
         If html extraction fails, fallback to summary.
@@ -99,7 +99,7 @@ class DDGS(Retriever):
 
         if html:
             try:
-                extracted = trafilatura.extract(html)
+                extracted = await asyncio.to_thread(trafilatura.extract, html)
                 if extracted:
                     webpage["content"] = extracted.strip()
                     return webpage
