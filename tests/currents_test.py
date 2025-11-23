@@ -12,13 +12,14 @@ Requirements:
 
 import os
 import sys
+from pathlib import Path
 import asyncio
 from datetime import datetime, timedelta
 
 from dotenv import load_dotenv
 
 # Add parent directory to path for imports
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
+sys.path.append(str(Path(__file__).resolve().parent.parent))
 
 from data_pipeline.crawling.currents import CurrentsAPI
 from data_pipeline.models import DataManager
