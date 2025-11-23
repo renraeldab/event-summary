@@ -6,6 +6,7 @@ from pathlib import Path
 
 import httpx
 from tqdm.asyncio import tqdm_asyncio
+from tqdm import tqdm
 
 
 class Webpage(TypedDict):
@@ -98,6 +99,8 @@ class DataManager:
         self._extractor_queue = asyncio.Queue()     # entity extractor
         self._generator_queue = asyncio.Queue()     # sub-theme generator
         self._stop_event = asyncio.Event()
+        self._extractor_bar = None
+        self._generator_bar = None
     
     async def produce_webpage(self, webpage: Webpage) -> None:
         if self._stop_event.is_set():
@@ -106,14 +109,26 @@ class DataManager:
         if webpage["url"] not in self.webpages:
             async with self._webpage_lock:
                 self.webpages[webpage["url"]] = webpage
+                if self._extractor_bar is not None:
+                    self._extractor_bar.total = len(self.webpages)
+                    self._extractor_bar.refresh()
+                if self._generator_bar is not None:
+                    self._generator_bar.total = len(self.webpages)
+                    self._generator_bar.refresh()
             await self._extractor_queue.put(webpage["url"])
             await self._generator_queue.put(webpage["url"])
     
     async def consume_webpage(self, processor_type: ProcessorType) -> Webpage | None:
         if processor_type == "extractor":
             _queue = self._extractor_queue
+            if self._extractor_bar is None:
+                self._extractor_bar = tqdm(total=len(self.webpages), desc="Entity Extractor", leave=False)
+            _bar = self._extractor_bar
         elif processor_type == "generator":
             _queue = self._generator_queue
+            if self._generator_bar is None:
+                self._generator_bar = tqdm(total=len(self.webpages), desc="Sub-theme Generator", leave=False)
+            _bar = self._generator_bar
         else:
             raise ValueError(f"Invalid processor_type: {processor_type}")
         while not self._stop_event.is_set():
@@ -127,16 +142,22 @@ class DataManager:
             url = await _queue.get()
             return self.webpages[url]
         else:
-            _queue.task_done()
+            try:
+                _queue.task_done()
+                _bar.close()
+            except ValueError:
+                pass
             return None
     
-    async def update_entities(self, entities: dict[tuple[EntityType, str], Entity]) -> None:
+    async def update_entities(self, entities: list[Entity], n_update: int) -> None:
         async with self._entity_lock:
-            self.entities.update(entities)
+            self.entities.update({(entity["type"], entity["name"]): entity for entity in entities})
+            self._extractor_bar.update(n_update)
     
-    async def update_sub_themes(self, sub_themes: dict[str, SubTheme]) -> None:
+    async def update_sub_themes(self, sub_themes: list[SubTheme], n_update: int) -> None:
         async with self._sub_theme_lock:
-            self.sub_themes.update(sub_themes)
+            self.sub_themes.update({sub_theme["title"]: sub_theme for sub_theme in sub_themes})
+            self._generator_bar.update(n_update)
     
     def finish_crawling(self) -> None:
         self._stop_event.set()
@@ -273,8 +294,8 @@ class Retriever(ABC):
         """
         raise NotImplementedError
 
-    def _preprocess(self, webpage: Webpage) -> Webpage:
-        """Optional sync transformation for a single webpage's content (e.g., extracting text from html)."""
+    async def _preprocess(self, webpage: Webpage) -> Webpage:
+        """Optional async transformation for a single webpage's content (e.g., extracting text from html)."""
         return webpage
 
     async def retrieve(self) -> None:
@@ -288,7 +309,7 @@ class Retriever(ABC):
             async def task(entry: Webpage) -> None:
                 async with semaphore:
                     webpage = await self._fetch(client, entry)
-                    webpage = self._preprocess(webpage)
+                    webpage = await self._preprocess(webpage)
                     if webpage["content"] is not None:
                         await self.data_manager.produce_webpage(webpage)
                     await asyncio.sleep(self.wait_fixed)
@@ -315,14 +336,28 @@ class Processor(ABC):
         self.data_manager = data_manager
         self.batch_size = batch_size
         self.n_processors = n_processors
+        if self.processor_type == "extractor":
+            self.update = self.data_manager.update_entities
+        elif self.processor_type == "generator":
+            self.update = self.data_manager.update_sub_themes
+        else:
+            raise ValueError(f"Unknown processor type {self.processor_type}")
     
     @abstractmethod
-    async def _process(self, webpages: list[Webpage]) -> None:
-        """Process a batch of webpages.
+    async def _process(self, webpages: list[Webpage]) -> list[Entity | SubTheme]:
+        """Process a batch of webpages and return a list.
         
-        **Concurrent Update**:
-        - Use the data manager update method if n_processors > 1.
-        - Or avoid concurrent writing.
+        **Override**:
+        - The processor will upsert the returned list into the data manager.
+        - Existing sub-themes or entities in the data manager may get overridden.
+        - Save intermediate results elsewhere if they should be preserved.
+        - Return an empty list if no upsertion is needed.
+
+        **Concurrency**
+        - The sub-themes and entities in the data manager are not protected for now.
+        - This is fine for most cases.
+            - If n_processors > 1: such processors normally won't rely on previous results.
+            - If n_processors = 1: it's safe to directly access the data.
 
         **Performance**:
         - Try to avoid blocking calls.
@@ -337,13 +372,15 @@ class Processor(ABC):
             # if crawling has finished
             if webpage is None:
                 if buffer:
-                    await self._process(buffer)
+                    delta = await self._process(buffer)
+                    await self.update(delta, len(buffer))
                 break
             buffer.append(webpage)
             if len(buffer) >= self.batch_size:
-                await self._process(buffer)
+                delta = await self._process(buffer)
+                await self.update(delta, len(buffer))
                 buffer = []
     
     async def run(self) -> None:
-        """Public method. Override this method if needed."""
+        """Public method. Override this method if needed (e.g., add final deduplication)."""
         await asyncio.gather(*[self._start() for _ in range(self.n_processors)])
