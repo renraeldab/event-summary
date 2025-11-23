@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 
 import httpx
+from tqdm.asyncio import tqdm_asyncio
 
 
 class Webpage(TypedDict):
@@ -212,6 +213,8 @@ class Retriever(ABC):
     - _preprocess: transformation of a fetched webpage
     """
 
+    name: str = ""
+
     def __init__(
         self,
         query: str,
@@ -290,7 +293,7 @@ class Retriever(ABC):
                         await self.data_manager.produce_webpage(webpage)
                     await asyncio.sleep(self.wait_fixed)
             
-            await asyncio.gather(*[task(entry) for entry in self.entries])
+            await tqdm_asyncio.gather(*[task(entry) for entry in self.entries], desc=self.name, leave=False)
 
 
 class Processor(ABC):
