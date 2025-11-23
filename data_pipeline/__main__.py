@@ -5,7 +5,7 @@ import asyncio
 from dotenv import load_dotenv
 
 from data_pipeline.models import DataManager, Retriever, Processor
-from data_pipeline.crawling import Metaso, DDGS, CurrentsAPI
+from data_pipeline.crawling import Metaso, DDGS, CurrentsAPI, RSS
 from data_pipeline.processing import DummyProcessor
 
 
