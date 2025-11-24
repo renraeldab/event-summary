@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 
 from data_pipeline.models import DataManager, Retriever, Processor
 from data_pipeline.crawling import Metaso, DDGS, CurrentsAPI
-from data_pipeline.processing import BaselineExtractor
+from data_pipeline.processing import BaselineExtractor, BaselineGenerator
 from data_pipeline.utils import OpenAICompatible
 
 # read variables from .env
@@ -42,6 +42,7 @@ if __name__ == "__main__":
     if openai_model and (openai_base_url is not None or openai_api_key is not None):
         client = OpenAICompatible(openai_base_url, openai_api_key, openai_model, 2)
         processors.append(BaselineExtractor(query, data_manager, client))
+        processors.append(BaselineGenerator(query, data_manager, client))
     
     async def retrieve_all():
         await asyncio.gather(*[retriever.retrieve() for retriever in retrievers])

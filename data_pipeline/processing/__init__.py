@@ -1,1 +1,1 @@
-from .base import BaselineExtractor
+from .base import BaselineExtractor, BaselineGenerator

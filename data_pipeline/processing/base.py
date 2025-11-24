@@ -84,7 +84,41 @@ EXTRACTOR_USER_PROMPT = """ # Query
 ```
 
 Return the full updated entity list in JSON. DO NOT output anything else."""
-generator_prompt = ""
+GENERATOR_SYS_PROMPT = """# Task
+
+Given a query and a batch of incoming documents, summarize sub-themes iteratively.
+- The valid sub-theme schema will be given.
+- The current sub-themes will be given.
+- You should output the complete sub-theme list as the result of this iteration.
+- Your goal is to maintain the sub-theme list so that:
+    - Sub-themes together can cover all important information to help people understand the query.
+    - There is no duplication or overlap.
+    - Ideally, the number of sub-themes is no more than 6.
+
+# Sub-theme Definition
+
+```python
+class SubTheme(TypedDict):
+    title: str
+    content: str    # be concise
+```"""
+GENERATOR_USER_PROMPT = """ # Query
+
+{query}
+
+# Incoming Documents
+
+<DOCUMENTS START>
+{documents}
+<DOCUMENTS END>
+
+# Current Sub-themes
+
+```json
+{sub_themes_json}
+```
+
+Return the full updated sub-theme list in JSON. DO NOT output anything else."""
 
 
 class LLMProcessor(Processor):
@@ -174,12 +208,60 @@ class BaselineExtractor(LLMProcessor):
         return entities
 
 
+def check_sub_theme(sub_theme: Any) -> None:
+    assert isinstance(sub_theme, dict), f"The sub-theme should be dict instead of {type(sub_theme)}."
+    assert "title" in sub_theme, "Missing field: title."
+    assert "content" in sub_theme, "Missing field: content."
+
+
 class BaselineGenerator(LLMProcessor):
+    """Simple solution."""
+
     processor_type = "generator"
 
-    def __init__(self, query, data_manager: DataManager, client: OpenAICompatible):
-        super().__init__(query, data_manager, client)
+    def __init__(self, query: str, data_manager: DataManager, client: OpenAICompatible):
+        super().__init__(query, data_manager, client, 4)
     
+    async def _update_sub_themes(self, messages: list[dict]) -> tuple[list[SubTheme], list[dict] | None]:
+        message = await self.get_message(messages)
+        messages.append({"role": "assistant", "content": message.content})
+        # remove markdown code block
+        text = message.content.strip("```")
+        if text.startswith("json"):
+            text = text.lstrip("json")
+        try:
+            sub_themes = json.loads(text)
+        except json.JSONDecodeError as e:
+            messages.append({"role": "user", "content": f"JSONDecodeError: {e} Try again."})
+            return [], messages
+        if not isinstance(sub_themes, list):
+            messages.append({"role": "user", "content": "The JSON object is not a list. Try again."})
+            return [], messages
+        for sub_theme in sub_themes:
+            try:
+                check_sub_theme(sub_theme)
+            except AssertionError as e:
+                messages.append({"role": "user", "content": f"{e} Try again."})
+                return [], messages
+        return sub_themes, None
+
     async def _process(self, webpages: list[Webpage]) -> list[SubTheme]:
-        message = await self.get_message([{"role": "user", "content": ""}])
-        raise NotImplementedError
+        retries = 0
+        user_prompt = GENERATOR_USER_PROMPT.format(
+            query=self.query,
+            documents="\n\n===\n\n".join(webpage["content"] for webpage in webpages),
+            sub_themes_json=json.dumps(list(self.data_manager.sub_themes.values()), indent=4, ensure_ascii=False)
+        )
+        messages = [
+            {"role": "system", "content": GENERATOR_SYS_PROMPT},
+            {"role": "user", "content": user_prompt}
+        ]
+        while True:
+            if retries >= 3:
+                raise Exception("The LLM keeps failing to generate a valid output.")
+            sub_themes, messages = await self._update_sub_themes(messages)
+            if messages is not None:
+                retries += 1
+                continue
+            break
+        return sub_themes
