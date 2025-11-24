@@ -64,8 +64,7 @@ class Artifact(EntityBase):
 
 class Event(EntityBase):
     type: Literal["Event"]
-    start_time: str
-    end_time: str
+    time: str
 
 
 Entity = Union[
