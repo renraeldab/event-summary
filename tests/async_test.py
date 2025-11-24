@@ -47,8 +47,8 @@ class TestRetriever(Retriever):
 class TestGenerator(Processor):
     processor_type = "generator"
 
-    def __init__(self, data_manager):
-        super().__init__(data_manager, 2, 1)
+    def __init__(self, query, data_manager):
+        super().__init__(query, data_manager, 2, 1)
         self.chars = string.ascii_uppercase + string.ascii_lowercase + string.digits
     
     def _generate_sub_theme(self) -> SubTheme:
@@ -69,8 +69,8 @@ class TestGenerator(Processor):
 class TestExtractor(Processor):
     processor_type = "extractor"
 
-    def __init__(self, data_manager):
-        super().__init__(data_manager, 2, 2)
+    def __init__(self, query, data_manager):
+        super().__init__(query, data_manager, 2, 2)
         self.entity_types = [
             "Person",
             "Creature",
@@ -109,7 +109,7 @@ class TestExtractor(Processor):
 if __name__ == "__main__":
     data_manager = DataManager()
     retrievers = [TestRetriever(f"test {i}", data_manager) for i in range(4)]
-    processors = [TestGenerator(data_manager), TestExtractor(data_manager)]
+    processors = [TestGenerator("", data_manager), TestExtractor("", data_manager)]
 
     async def retrieve_all():
         await asyncio.gather(*[retriever.retrieve() for retriever in retrievers])

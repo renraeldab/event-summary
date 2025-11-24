@@ -328,10 +328,12 @@ class Processor(ABC):
 
     def __init__(
         self,
+        query: str,
         data_manager: DataManager,
         batch_size: int = 1,        # number of webpages to process together
         n_processors: int = 1     # number of processors
     ):
+        self.query = query
         self.data_manager = data_manager
         self.batch_size = batch_size
         self.n_processors = n_processors
