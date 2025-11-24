@@ -281,29 +281,32 @@
 
             <!-- Chronological Summary -->
             <div class="tab-content" data-tab="chronological">
-                {% if topic.output.webpages %}
+                {% if topic.output.entities %}
                 <table>
                     <thead>
                     <tr>
                         <th>Time</th>
                         <th>Event</th>
-                        <th>Summary</th>
+                        <th>Description</th>
                     </tr>
                     </thead>
                     <tbody>
-                    {% for page in topic.output.webpages %}
+                    {% for ent in topic.output.entities %}
+                    {% if ent.type == "Event" %}
                     <tr>
-                        <td>{{ page.timestamp or "N/A" }}</td>
-                        <td>{{ page.title }}</td>
-                        <td>{{ page.summary or "No summary available." }}</td>
+                        <td>{{ ent.time or "N/A" }}</td>
+                        <td>{{ ent.name }}</td>
+                        <td>{{ ent.description }}</td>
                     </tr>
+                    {% endif %}
                     {% endfor %}
                     </tbody>
                 </table>
                 {% else %}
-                <p>No webpages available.</p>
+                <p>No event entities available.</p>
                 {% endif %}
             </div>
+
 
             <!-- Sources -->
             <div class="tab-content" data-tab="sources">
