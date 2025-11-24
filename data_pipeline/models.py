@@ -148,14 +148,14 @@ class DataManager:
                 pass
             return None
     
-    async def update_entities(self, entities: list[Entity], n_update: int) -> None:
+    async def override_entities(self, entities: list[Entity], n_update: int) -> None:
         async with self._entity_lock:
-            self.entities.update({(entity["type"], entity["name"]): entity for entity in entities})
+            self.entities = {(entity["type"], entity["name"]): entity for entity in entities}
             self._extractor_bar.update(n_update)
     
-    async def update_sub_themes(self, sub_themes: list[SubTheme], n_update: int) -> None:
+    async def override_sub_themes(self, sub_themes: list[SubTheme], n_update: int) -> None:
         async with self._sub_theme_lock:
-            self.sub_themes.update({sub_theme["title"]: sub_theme for sub_theme in sub_themes})
+            self.sub_themes = {sub_theme["title"]: sub_theme for sub_theme in sub_themes}
             self._generator_bar.update(n_update)
     
     def finish_crawling(self) -> None:
@@ -338,9 +338,9 @@ class Processor(ABC):
         self.batch_size = batch_size
         self.n_processors = n_processors
         if self.processor_type == "extractor":
-            self.update = self.data_manager.update_entities
+            self.override = self.data_manager.override_entities
         elif self.processor_type == "generator":
-            self.update = self.data_manager.update_sub_themes
+            self.override = self.data_manager.override_sub_themes
         else:
             raise ValueError(f"Unknown processor type {self.processor_type}")
     
@@ -349,16 +349,12 @@ class Processor(ABC):
         """Process a batch of webpages and return a list.
         
         **Override**:
-        - The processor will upsert the returned list into the data manager.
-        - Existing sub-themes or entities in the data manager may get overridden.
+        - The processor will use the returned list to override the data in data manager.
         - Save intermediate results elsewhere if they should be preserved.
-        - Return an empty list if no upsertion is needed.
+        - Return an empty list if override is not needed.
 
         **Concurrency**
         - The sub-themes and entities in the data manager are not protected for now.
-        - This is fine for most cases.
-            - If n_processors > 1: such processors normally won't rely on previous results.
-            - If n_processors = 1: it's safe to directly access the data.
 
         **Performance**:
         - Try to avoid blocking calls.
@@ -374,12 +370,12 @@ class Processor(ABC):
             if webpage is None:
                 if buffer:
                     delta = await self._process(buffer)
-                    await self.update(delta, len(buffer))
+                    await self.override(delta, len(buffer))
                 break
             buffer.append(webpage)
             if len(buffer) >= self.batch_size:
                 delta = await self._process(buffer)
-                await self.update(delta, len(buffer))
+                await self.override(delta, len(buffer))
                 buffer = []
     
     async def run(self) -> None:

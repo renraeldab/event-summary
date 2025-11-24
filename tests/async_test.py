@@ -63,7 +63,7 @@ class TestGenerator(Processor):
         await asyncio.sleep(3)
         sub_theme = self._generate_sub_theme()
         sub_theme["content"] = f"Consumed {len(webpages)} webpages."
-        return [sub_theme]
+        return list(self.data_manager.sub_themes.values()) + [sub_theme]
 
 
 class TestExtractor(Processor):
@@ -96,9 +96,9 @@ class TestExtractor(Processor):
         return entity
     
     async def _process(self, webpages: list[Webpage]) -> list[Entity]:
-        """Return three entities (may override existing entities)."""
+        """Return three entities (same entities get overrided)."""
         await asyncio.sleep(3)
-        entities = []
+        entities = list(self.data_manager.entities.values())
         for _ in range(4):
             entity = self._generate_entity()
             entity["description"] = f"Consumed {len(webpages)} webpages."
