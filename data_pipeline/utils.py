@@ -13,6 +13,7 @@ class OpenAICompatible:
         base_url: str | None,
         api_key: str | None,
         model: str,
+        temperature: float | None = None,
         max_concurrent: int = 1
     ):
         self.client = openai.AsyncOpenAI(
@@ -21,7 +22,10 @@ class OpenAICompatible:
         )
         self.semaphore = asyncio.Semaphore(max_concurrent)
         self.model = model
+        self.temperature = temperature
 
     async def chat_completions(self, messages: list[dict], **kwargs) -> ChatCompletion:
+        if self.temperature is not None and "temperature" not in kwargs:
+            kwargs["temperature"] = self.temperature
         async with self.semaphore:
             return await self.client.chat.completions.create(messages=messages, model=self.model, **kwargs)
