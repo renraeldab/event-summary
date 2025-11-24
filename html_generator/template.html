@@ -23,10 +23,10 @@
             min-height: 100vh;
         }
 
-        /* Sidebar Styles */
+        /* Sidebar */
         .sidebar {
-            width: 280px;
-            background: white;
+            width: 260px;
+            background: #ffffff;
             border-right: 1px solid #e0e0e0;
             padding: 20px;
             overflow-y: auto;
@@ -35,17 +35,17 @@
         .sidebar h2 {
             font-size: 18px;
             font-weight: 600;
-            margin-bottom: 20px;
+            margin-bottom: 16px;
             color: #2c3e50;
         }
 
         .query-item {
-            padding: 16px;
-            margin-bottom: 12px;
+            padding: 12px 14px;
+            margin-bottom: 10px;
             border-radius: 8px;
+            background: #f8f9fa;
             cursor: pointer;
             transition: all 0.2s ease;
-            background: #f8f9fa;
         }
 
         .query-item:hover {
@@ -54,17 +54,12 @@
 
         .query-item.active {
             background: #4a6cf7;
-            color: white;
-        }
-
-        .query-item.active:hover {
-            background: #3a56d4;
+            color: #ffffff;
         }
 
         .query-title {
-            font-weight: 600;
             font-size: 14px;
-            margin-bottom: 4px;
+            font-weight: 600;
         }
 
         .query-date {
@@ -73,24 +68,34 @@
             margin-top: 2px;
         }
 
-        /* Main Content Styles */
+        /* Main area */
         .main-content {
             flex: 1;
             padding: 24px;
             overflow-y: auto;
         }
 
+        /* Each topic block */
+        .topic-content {
+            display: none;
+        }
+
+        .topic-content.active {
+            display: block;
+        }
+
+        /* Tabs */
         .tabs {
             display: flex;
             border-bottom: 2px solid #e0e0e0;
-            margin-bottom: 24px;
+            margin-bottom: 20px;
         }
 
         .tab {
-            padding: 12px 24px;
+            padding: 10px 20px;
             cursor: pointer;
-            font-weight: 500;
             font-size: 14px;
+            font-weight: 500;
             color: #666;
             border-bottom: 2px solid transparent;
             transition: all 0.2s ease;
@@ -102,7 +107,7 @@
 
         .tab.active {
             color: #4a6cf7;
-            border-bottom: 2px solid #4a6cf7;
+            border-bottom-color: #4a6cf7;
         }
 
         .tab-content {
@@ -115,60 +120,62 @@
 
         /* Sub-themes */
         .theme-item {
-            margin-bottom: 24px;
-            padding-bottom: 24px;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
             border-bottom: 1px solid #e0e0e0;
         }
 
         .theme-title {
             font-size: 18px;
             font-weight: 600;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
             color: #2c3e50;
         }
 
         .theme-summary {
             font-size: 14px;
             color: #555;
-            line-height: 1.7;
         }
 
         /* Tables */
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 16px;
+            margin-top: 14px;
         }
 
         th {
             background: #f8f9fa;
-            padding: 12px 16px;
+            padding: 10px 12px;
             text-align: left;
             font-weight: 600;
             color: #2c3e50;
             border-bottom: 2px solid #e0e0e0;
+            font-size: 13px;
         }
 
         td {
-            padding: 12px 16px;
+            padding: 10px 12px;
             border-bottom: 1px solid #e0e0e0;
-            font-size: 14px;
+            font-size: 13px;
             color: #555;
+            vertical-align: top;
         }
 
         tr:last-child td {
             border-bottom: none;
         }
 
-        /* Sources */
+        /* Sources list */
         .sources-list {
             list-style: none;
+            margin-top: 10px;
         }
 
         .source-item {
-            margin-bottom: 12px;
-            padding: 12px;
-            background: white;
+            margin-bottom: 10px;
+            padding: 10px;
+            background: #ffffff;
             border-radius: 8px;
             border: 1px solid #e0e0e0;
             transition: all 0.2s ease;
@@ -189,7 +196,6 @@
             text-decoration: underline;
         }
 
-        /* Responsive */
         @media (max-width: 768px) {
             .container {
                 flex-direction: column;
@@ -199,20 +205,10 @@
                 width: 100%;
                 border-right: none;
                 border-bottom: 1px solid #e0e0e0;
-                padding: 16px;
             }
 
             .main-content {
                 padding: 16px;
-            }
-
-            .tabs {
-                flex-wrap: wrap;
-            }
-
-            .tab {
-                padding: 8px 16px;
-                font-size: 12px;
             }
         }
     </style>
@@ -223,156 +219,162 @@
     <div class="sidebar">
         <h2>Queries</h2>
         {% for item in data %}
-        <div class="query-item{% if loop.first %} active{% endif %}" data-query="{{ item.query }}">
+        <div class="query-item{% if loop.first %} active{% endif %}" data-index="{{ loop.index0 }}">
             <div class="query-title">{{ item.query }}</div>
-            <div class="query-date">Loaded from JSON</div>
+            <div class="query-date">Loaded from data files</div>
         </div>
         {% endfor %}
     </div>
 
-    <!-- Main Content -->
+    <!-- Main content: one block per topic -->
     <div class="main-content">
-        <div class="tabs">
-            <div class="tab active" data-tab="sub-themes">Sub-themes</div>
-            <div class="tab" data-tab="entities">Entities</div>
-            <div class="tab" data-tab="chronological">Chronological Summary</div>
-            <div class="tab" data-tab="sources">Sources</div>
-        </div>
-
-        <!-- Sub-themes Content -->
-        <div class="tab-content active" id="sub-themes-content">
-            {% if data %}
-            {% set topic = data[0] %}
-            {% if topic.output.sub_themes %}
-            {% for st in topic.output.sub_themes %}
-            <div class="theme-item">
-                <div class="theme-title">{{ st.title }}</div>
-                <div class="theme-summary">{{ st.content }}</div>
+        {% if data %}
+        {% for topic in data %}
+        <div class="topic-content{% if loop.first %} active{% endif %}" data-index="{{ loop.index0 }}">
+            <!-- Tabs -->
+            <div class="tabs">
+                <div class="tab active" data-tab="sub-themes">Sub-themes</div>
+                <div class="tab" data-tab="entities">Entities</div>
+                <div class="tab" data-tab="chronological">Chronological Summary</div>
+                <div class="tab" data-tab="sources">Sources</div>
             </div>
-            {% endfor %}
-            {% else %}
-            <p>No sub-themes available.</p>
-            {% endif %}
-            {% else %}
-            <p>No data available.</p>
-            {% endif %}
-        </div>
 
-        <!-- Entities Content -->
-        <div class="tab-content" id="entities-content">
-            {% if data %}
-            {% set topic = data[0] %}
-            {% if topic.output.entities %}
-            <table>
-                <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Type</th>
-                    <th>Description</th>
-                </tr>
-                </thead>
-                <tbody>
-                {% for ent in topic.output.entities %}
-                <tr>
-                    <td>{{ ent.name }}</td>
-                    <td>{{ ent.type }}</td>
-                    <td>{{ ent.description }}</td>
-                </tr>
+            <!-- Sub-themes -->
+            <div class="tab-content active" data-tab="sub-themes">
+                {% if topic.output.sub_themes %}
+                {% for st in topic.output.sub_themes %}
+                <div class="theme-item">
+                    <div class="theme-title">{{ st.title }}</div>
+                    <div class="theme-summary">{{ st.content }}</div>
+                </div>
                 {% endfor %}
-                </tbody>
-            </table>
-            {% else %}
-            <p>No entities available.</p>
-            {% endif %}
-            {% else %}
-            <p>No data available.</p>
-            {% endif %}
-        </div>
+                {% else %}
+                <p>No sub-themes available.</p>
+                {% endif %}
+            </div>
 
-        <!-- Chronological Summary Content -->
-        <div class="tab-content" id="chronological-content">
-            {% if data %}
-            {% set topic = data[0] %}
-            {% if topic.output.webpages %}
-            <table>
-                <thead>
-                <tr>
-                    <th>Time</th>
-                    <th>Event</th>
-                    <th>Summary</th>
-                </tr>
-                </thead>
-                <tbody>
-                {% for page in topic.output.webpages %}
-                <tr>
-                    <td>{{ page.timestamp or "N/A" }}</td>
-                    <td>{{ page.title }}</td>
-                    <td>{{ page.summary or "No summary available." }}</td>
-                </tr>
-                {% endfor %}
-                </tbody>
-            </table>
-            {% else %}
-            <p>No webpages available.</p>
-            {% endif %}
-            {% else %}
-            <p>No data available.</p>
-            {% endif %}
-        </div>
+            <!-- Entities -->
+            <div class="tab-content" data-tab="entities">
+                {% if topic.output.entities %}
+                <table>
+                    <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Type</th>
+                        <th>Description</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for ent in topic.output.entities %}
+                    <tr>
+                        <td>{{ ent.name }}</td>
+                        <td>{{ ent.type }}</td>
+                        <td>{{ ent.description }}</td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <p>No entities available.</p>
+                {% endif %}
+            </div>
 
-        <!-- Sources Content -->
-        <div class="tab-content" id="sources-content">
-            {% if data %}
-            {% set topic = data[0] %}
-            {% if topic.output.webpages %}
-            <ul class="sources-list">
-                {% for page in topic.output.webpages %}
-                <li class="source-item">
-                    {% if page.url %}
-                    <a href="{{ page.url }}" class="source-link" target="_blank">
-                        {{ page.title or page.url }}
-                    </a>
-                    {% else %}
-                    <span>{{ page.title or "Untitled source" }}</span>
-                    {% endif %}
-                </li>
-                {% endfor %}
-            </ul>
-            {% else %}
-            <p>No sources available.</p>
-            {% endif %}
-            {% else %}
-            <p>No data available.</p>
-            {% endif %}
+            <!-- Chronological Summary -->
+            <div class="tab-content" data-tab="chronological">
+                {% if topic.output.webpages %}
+                <table>
+                    <thead>
+                    <tr>
+                        <th>Time</th>
+                        <th>Event</th>
+                        <th>Summary</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for page in topic.output.webpages %}
+                    <tr>
+                        <td>{{ page.timestamp or "N/A" }}</td>
+                        <td>{{ page.title }}</td>
+                        <td>{{ page.summary or "No summary available." }}</td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <p>No webpages available.</p>
+                {% endif %}
+            </div>
+
+            <!-- Sources -->
+            <div class="tab-content" data-tab="sources">
+                {% if topic.output.webpages %}
+                <ul class="sources-list">
+                    {% for page in topic.output.webpages %}
+                    <li class="source-item">
+                        {% if page.url %}
+                        <a class="source-link" href="{{ page.url }}" target="_blank">
+                            {{ page.title or page.url }}
+                        </a>
+                        {% else %}
+                        <span>{{ page.title or "Untitled source" }}</span>
+                        {% endif %}
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p>No sources available.</p>
+                {% endif %}
+            </div>
         </div>
+        {% endfor %}
+        {% else %}
+        <p>No data available.</p>
+        {% endif %}
     </div>
 </div>
 
 <script>
-    // Tab switching functionality
-    const tabs = document.querySelectorAll('.tab');
-    const tabContents = document.querySelectorAll('.tab-content');
+    // Tabs inside each topic
+    document.querySelectorAll('.topic-content').forEach(function(topicEl) {
+        const tabs = topicEl.querySelectorAll('.tab');
+        const contents = topicEl.querySelectorAll('.tab-content');
 
-    tabs.forEach(tab => {
-        tab.addEventListener('click', () => {
-            tabs.forEach(t => t.classList.remove('active'));
-            tabContents.forEach(c => c.classList.remove('active'));
+        tabs.forEach(function(tab) {
+            tab.addEventListener('click', function () {
+                const tabName = tab.getAttribute('data-tab');
 
-            tab.classList.add('active');
+                tabs.forEach(function (t) { t.classList.remove('active'); });
+                contents.forEach(function (c) { c.classList.remove('active'); });
 
-            const tabName = tab.getAttribute('data-tab');
-            document.getElementById(`${tabName}-content`).classList.add('active');
+                tab.classList.add('active');
+                const target = topicEl.querySelector('.tab-content[data-tab="' + tabName + '"]');
+                if (target) {
+                    target.classList.add('active');
+                }
+            });
         });
     });
 
-    // Query switching functionality (UI only, data is static on first item)
+    // Switch visible topic when clicking sidebar
     const queryItems = document.querySelectorAll('.query-item');
+    const topicBlocks = document.querySelectorAll('.topic-content');
 
-    queryItems.forEach(query => {
-        query.addEventListener('click', () => {
-            queryItems.forEach(q => q.classList.remove('active'));
-            query.classList.add('active');
-            console.log('Switched to query:', query.getAttribute('data-query'));
+    queryItems.forEach(function (item) {
+        item.addEventListener('click', function () {
+            const index = item.getAttribute('data-index');
+
+            // sidebar highlight
+            queryItems.forEach(function (q) { q.classList.remove('active'); });
+            item.classList.add('active');
+
+            // show the matching topic block
+            topicBlocks.forEach(function (block) {
+                if (block.getAttribute('data-index') === index) {
+                    block.classList.add('active');
+                } else {
+                    block.classList.remove('active');
+                }
+            });
         });
     });
 </script>
