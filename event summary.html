@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Summary</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f8f9fa;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 260px;
+            background: #ffffff;
+            border-right: 1px solid #e0e0e0;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .sidebar h2 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: #2c3e50;
+        }
+
+        .query-item {
+            padding: 12px 14px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            background: #f8f9fa;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .query-item:hover {
+            background: #e9ecef;
+        }
+
+        .query-item.active {
+            background: #4a6cf7;
+            color: #ffffff;
+        }
+
+        .query-title {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .query-date {
+            font-size: 11px;
+            opacity: 0.8;
+            margin-top: 2px;
+        }
+
+        /* Main area */
+        .main-content {
+            flex: 1;
+            padding: 24px;
+            overflow-y: auto;
+        }
+
+        /* Each topic block */
+        .topic-content {
+            display: none;
+        }
+
+        .topic-content.active {
+            display: block;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            border-bottom: 2px solid #e0e0e0;
+            margin-bottom: 20px;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            color: #666;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s ease;
+        }
+
+        .tab:hover {
+            color: #4a6cf7;
+        }
+
+        .tab.active {
+            color: #4a6cf7;
+            border-bottom-color: #4a6cf7;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Sub-themes */
+        .theme-item {
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .theme-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: #2c3e50;
+        }
+
+        .theme-summary {
+            font-size: 14px;
+            color: #555;
+        }
+
+        /* Tables */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 14px;
+        }
+
+        th {
+            background: #f8f9fa;
+            padding: 10px 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #2c3e50;
+            border-bottom: 2px solid #e0e0e0;
+            font-size: 13px;
+        }
+
+        td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #e0e0e0;
+            font-size: 13px;
+            color: #555;
+            vertical-align: top;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* Sources list */
+        .sources-list {
+            list-style: none;
+            margin-top: 10px;
+        }
+
+        .source-item {
+            margin-bottom: 10px;
+            padding: 10px;
+            background: #ffffff;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+            transition: all 0.2s ease;
+        }
+
+        .source-item:hover {
+            border-color: #4a6cf7;
+            transform: translateY(-1px);
+        }
+
+        .source-link {
+            color: #4a6cf7;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .source-link:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid #e0e0e0;
+            }
+
+            .main-content {
+                padding: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <h2>Queries</h2>
+        
+        <div class="query-item active" data-index="0">
+            <div class="query-title">IShowSpeed</div>
+            <div class="query-date">Loaded from data files</div>
+        </div>
+        
+        <div class="query-item" data-index="1">
+            <div class="query-title">LLM</div>
+            <div class="query-date">Loaded from data files</div>
+        </div>
+        
+    </div>
+
+    <!-- Main content: one block per topic -->
+    <div class="main-content">
+        
+        
+        <div class="topic-content active" data-index="0">
+            <!-- Tabs -->
+            <div class="tabs">
+                <div class="tab active" data-tab="sub-themes">Sub-themes</div>
+                <div class="tab" data-tab="entities">Entities</div>
+                <div class="tab" data-tab="chronological">Chronological Summary</div>
+                <div class="tab" data-tab="sources">Sources</div>
+            </div>
+
+            <!-- Sub-themes -->
+            <div class="tab-content active" data-tab="sub-themes">
+                
+                
+                <div class="theme-item">
+                    <div class="theme-title">CYe9I1</div>
+                    <div class="theme-summary">Consumed 2 webpages.</div>
+                </div>
+                
+                <div class="theme-item">
+                    <div class="theme-title">KU84P0</div>
+                    <div class="theme-summary">Consumed 2 webpages.</div>
+                </div>
+                
+                <div class="theme-item">
+                    <div class="theme-title">RHfyjI</div>
+                    <div class="theme-summary">Consumed 2 webpages.</div>
+                </div>
+                
+                <div class="theme-item">
+                    <div class="theme-title">1Vz4wy</div>
+                    <div class="theme-summary">Consumed 2 webpages.</div>
+                </div>
+                
+                <div class="theme-item">
+                    <div class="theme-title">5mLZTl</div>
+                    <div class="theme-summary">Consumed 2 webpages.</div>
+                </div>
+                
+                <div class="theme-item">
+                    <div class="theme-title">mYbYIM</div>
+                    <div class="theme-summary">Consumed 2 webpages.</div>
+                </div>
+                
+                <div class="theme-item">
+                    <div class="theme-title">QfY3Nj</div>
+                    <div class="theme-summary">Consumed 2 webpages.</div>
+                </div>
+                
+                <div class="theme-item">
+                    <div class="theme-title">Jpgd2q</div>
+                    <div class="theme-summary">Consumed 2 webpages.</div>
+                </div>
+                
+                <div class="theme-item">
+                    <div class="theme-title">J6ds0e</div>
+                    <div class="theme-summary">Consumed 2 webpages.</div>
+                </div>
+                
+                <div class="theme-item">
+                    <div class="theme-title">DTGdQ8</div>
+                    <div class="theme-summary">Consumed 2 webpages.</div>
+                </div>
+                
+                
+            </div>
+
+            <!-- Entities -->
+            <div class="tab-content" data-tab="entities">
+                
+                <p>No entities available.</p>
+                
+            </div>
+
+            <!-- Chronological Summary -->
+            <div class="tab-content" data-tab="chronological">
+                
+                <table>
+                    <thead>
+                    <tr>
+                        <th>Time</th>
+                        <th>Event</th>
+                        <th>Summary</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    
+                    <tr>
+                        <td>1744560000.0</td>
+                        <td>Youtube超级网红IShowSpeed于3月24日落地中国上海，开始17天8城的实时直播之旅</td>
+                        <td>次站北京，Speed和随行保镖在长城上误入游客阿姨的美颜滤镜，喜提极致瓜子脸金鱼眼，被网友做成新的meme迅速传开，阿姨@欣悦的该条抖音视频点赞已破250万。
+河南站创造了此行第一个人气高峰，一方面Speed本人也算是中国功夫以及武侠电影的爱好者，此站的目的地少林寺与其过往的互联网人设高度契合；另一方面Speed与少林武术教练梁师傅的互动过程一波三折又留有东方哲学的余韵，极大地调动了看客的激情与感性，发布在直播剪辑频道@Live Speedy的1小时合集播放量断层领跑。</td>
+                    </tr>
+                    
+                    <tr>
+                        <td>1738771200.0</td>
+                        <td>IShowSpeed rat dance: TikTok · IShowSpeed</td>
+                        <td>IShowSpeed rat dance: TikTok · IShowSpeed
+**Credits**
+Models: HoYoverse
+Shader: Festivity GitHub - festivities/Blender-miHoYo-Shaders: Shader for Blender attempting to replicate the shading
+Stage: Genshin Impact
+Motion: mikuqueen https://www.patreon.com/c/mikuqueen
+Audio: ratomilton ratomilton on TikTok
+Software: Blender, Adobe Premiere Pro, Adobe Photoshop
+Enjoy the video!</td>
+                    </tr>
+                    
+                    <tr>
+                        <td>1744128000.0</td>
+                        <td>海外社媒千万粉丝顶流网红IShowSpeed（以下简称Speed）自3月24日起开启中国行</td>
+                        <td>海外社媒千万粉丝顶流网红IShowSpeed（以下简称Speed）自3月24日起开启中国行，凭借无脚本、高互动的直播形式，在YouTube等社交媒体引发空前热度。
+自开播以来，Speed在短短两周内涨粉将近150万。
+其中国行系列直播单场观看量最高达1058万人次，最低570万人次，较此前平均200万的观看量实现400%的爆发式增长。
+通过OneSight营销云的“社交聆听”功能，我们对近两周“Speed中国行”在海外社交媒体与互联网的讨论进行了聆听。</td>
+                    </tr>
+                    
+                    <tr>
+                        <td>1548691200.0</td>
+                        <td>International Internet Sensation iShowSpeed Started Live-streaming in Shenzhen</td>
+                        <td>南方财经全媒体记者 袁思杰 实习生魏天意 广州报道
+International content creator iShowSpeed today started a highly anticipated livestream from Shenzhen, China&#39;s globally renowned tech innovation hub.
+The event marks the first time the viral sensation has fused cutting-edge technology exploration with cultural immersion in an Asian metropolis.
+Follow us for more interesting clips of Speed&#39;s trip in Shenzhen, China!</td>
+                    </tr>
+                    
+                    <tr>
+                        <td>1743523200.0</td>
+                        <td>IShowSpeed（以下简称Speed）</td>
+                        <td>Speed与《阳光彩虹小白马》的“邂逅”，可以说是一种互相成就的文化奇遇——他不仅将这首中文歌带到了美国互联网，还因此成为了全球文化的模因（Meme）。
+2022年他再次爆火的直播中，粉丝们毫无预警地“投稿”了这首歌，激发的并非歌本身，而是Speed的表情变化和反应。
+尽管很多人对这位“高能暴走”的网红并不感兴趣，但他们依然被这首奇怪又洗脑的中文歌吸引。</td>
+                    </tr>
+                    
+                    <tr>
+                        <td>1743955200.0</td>
+                        <td>How IShowSpeed Became A Global Phenomenon</td>
+                        <td>3月24日晚，Speed在上海开启了自己的中国行直播，吸引了约560万人观看。
+随后，他在北京、郑州、成都、重庆、香港、深圳等多地进行直播，穿花袄、看舞狮、吃火锅、尝豆汁，骑共享单车、学习少林功夫……毫无包袱地给大家整活，中国行7场直播在YouTube的累计观看人次已突破 5500万。
+![在长城上表演后空翻](http://dingyue.ws.126.net/2025/0407/03e4f6faj00sucgrp00hod200h900otg00h900ot.jpg)
+![和机器人尬舞](http://dingyue.ws.126.net/2025/0407/6587f85cj00sucgrs00kjd200he00mig00he00mi.jpg)
+![学习少林功夫](http://dingyue.ws.126.net/2025/0407/590667b5j00sucgrt00fxd200gy00mgg00gy00mg.jpg)</td>
+                    </tr>
+                    
+                    <tr>
+                        <td>1748102400.0</td>
+                        <td>IShowSpeed youtube channel stats</td>
+                        <td>| Jun 4, 2025 Wed | 39800000 0 | 4380332671 + 2.26M | 1583 0 |
+| Jun 3, 2025 Tue | 39800000 0 | 4378063724 + 2.29M | 1583 0 |
+| Jun 2, 2025 Mon | 39800000 0 | 4375773140 + 3.26M | 1583 0 |
+| Jun 1, 2025 Sun | 39800000 0 | 4372507515 + 8.52M | 1583 + 2 |
+| May 31, 2025 Sat | 39800000 + 100K | 4363987015 + 6.07M | 1581 + 1 |
+| May 30, 2025 Fri | 39700000 0 | 4357915616 + 3.56M | 1580 0 |
+| May 29, 2025 Thu | 39700000 0 | 4354351460 + 2.49M | 1580 + 1 |
+| May 28, 2025 Wed | 39700000 0 | 4351852508 + 2.08M | 1579 0 |
+| May 27, 2025 Tue | 39700000 0 | 4349766726 + 3.31M | 1579 0 |
+| May 26, 2025 Mon | 39700000 --- | 4346446847 --- | 1579 --- |</td>
+                    </tr>
+                    
+                    <tr>
+                        <td>1744560000.0</td>
+                        <td>文 | 新声Pro</td>
+                        <td>&gt; 文 | 新声Pro，作者 | 张书涵
+17天8城，超50小时实时直播，全网相关视频播放量破亿。
+Youtube超级网红「IShowSpeed」（后简称Speed）于3月24日落地中国上海，随后开始了他的中国行直播之旅。
+!
+[](https://images.tmtpost.com/uploads/images/2025/04/d51619851efe6f6d3b1fd185baae1ba1_1744589965.jpeg?
+imageMogr2/auto-orient/strip/interlace/1/quality/85/thumbnail/1400x775/gravity/center/crop/!
+1400x775&amp;ext=.jpeg)</td>
+                    </tr>
+                    
+                    <tr>
+                        <td>1744041600.0</td>
+                        <td>網絡熱烘烘在談論Netflix上架的英國犯罪迷你劇集（Adolescence）（中譯《混沌少年時》）</td>
+                        <td>但原來我的兩名13歲半孖生兒子、快18歲的女兒，一直有留意他的頻道或視頻，他的頻道已經有3800萬追隨者。
+大孖跟我說，以他和同學所知，「IShowSpeed」又叫「Speed」，意謂很迅速表達自己。
+對孖仔和同學來說，「IShowSpeed」是繼美斯（Lionel Messi）去年隨國際邁亞密來港後再訪港的國際級巨星，「IShowSpeed」的粉絲不少是年輕男孩，尤其特別喜愛足球的。
+我問:「有甚麼吸引？
+」大孖說：「IShowSpeed」擅長打後空翻、扮巨星C朗及模仿狗叫。
+他的視頻很傻氣，很搞笑，充滿活力又極具喜劇感。</td>
+                    </tr>
+                    
+                    <tr>
+                        <td>1720454400.0</td>
+                        <td>IShowSpeed 是谁？他赚多少钱？</td>
+                        <td>在过去的几个月里，有几个人一直在问我 IShowSpeed 是谁，今天我将有一篇详细的文章介绍他是谁以及他如何成功走红。
+我们来看文章吧。
+目录
+谁是;
+Ο 显示速度，也简称为 速度是一位美国 YouTuber、主播和网络名人，他上传的有关游戏和各种其他主题的视频吸引了超过 100.000 名现场观众和数百万次观看。
+!
+[IShowSpeed 是谁？]
+(https://bitsounisproject.com/wp-content/uploads/2024/07/speed-greece-1024x555.png)</td>
+                    </tr>
+                    
+                    <tr>
+                        <td>N/A</td>
+                        <td>The Fanmail</td>
+                        <td>With the intention of expanding upon the achievements of the iStick, the Taiwanese business iCirround has teamed up with the Japanese firm HYPER by Sanho to bring the MFi-approved iShowFast to the market in the United States.
+This move is intended to capitalize on the popularity of the iStick.
+On addition to having read speeds of up to 140 MB/second via USB, the iShowFast has write speeds of up to 30 MB/second through Lightning.
+This makes it up to 14 times speedier than the iStick and SanDisk’s similar iXpand flash drives, both of which are currently available in the market.
+In the year 2022, it is anticipated that IShowSpeed will have a net worth of around $500,000 United States Dollars.</td>
+                    </tr>
+                    
+                    <tr>
+                        <td>1726588800.0</td>
+                        <td>IShowSpeed风靡大马！一起来看看他到底是谁？</td>
+                        <td>!
+[who-is-ishowspeed](https://www.tubefilter.com/wp-content/uploads/2023/10/i-show-speed-1400x825.jpg)
+IShowSpeed在YouTube上拥有3000多万粉丝，最开始在2019年开始直播生涯时是一名游戏直播主，凭借直播玩各种视频游戏（例如 Roblox、Fortnite 和 FIFA）获得了广泛的关注。
+后来直播内容也涵盖一些体育赛事，尤其是足球比赛，IShowSpeed经常在球赛中展现他的激烈反应，虽然时常引发争议，但他那独特且不可预测的风格让他迅速走红。</td>
+                    </tr>
+                    
+                    <tr>
+                        <td>1743955200.0</td>
+                        <td>IShowSpeed现身长沙</td>
+                        <td>4月7日，IShowSpeed现身长沙。
+![](https://imgs.rednet.cn/data/24/IMAGE_TENANT_LIB/IMAGE/7003863/2025/4/7/5118d1d22bc34fec8c0684f57011d38f.jpg?imageMogr2/thumbnail/960x960|watermark/1/image/aHR0cDovL2Nsb3VkLW1lZGlhLTEyNTQyMzEyNDIuY29zLmFwLWd1YW5nemhvdS5teXFjbG91ZC5jb20vZGF0YS8yNC9JTUFHRV9URU5BTlRfTElCL0lNQUdFLzcwMDM4NjAvMjAyMC81LzIyLzk4ZTdkYTY0NDEyZTQyM2U5MjhiNmZkZDQzYjg4M2ViLnBuZz9pbWFnZU1vZ3IyL3RodW1ibmFpbC8xODAuMHgxODAuMA==/gravity/southeast/dx/20.0/dy/20.0)
+IShowSpeed机车粉丝坐在车上看着他的直播，只为见他一面。
+![](https://imgs.rednet.cn/data/24/IMAGE_TENANT_LIB/IMAGE/7003863/2025/4/7/05bcf012b8014d5dbc5c5e9bdae7174b.jpg?imageMogr2/thumbnail/960x960|watermark/1/image/aHR0cDovL2Nsb3VkLW1lZGlhLTEyNTQyMzEyNDIuY29zLmFwLWd1YW5nemhvdS5teXFjbG91ZC5jb20vZGF0YS8yNC9JTUFHRV9URU5BTlRfTElCL0lNQUdFLzcwMDM4NjAvMjAyMC81LzIyLzk4ZTdkYTY0NDEyZTQyM2U5MjhiNmZkZDQzYjg4M2ViLnBuZz9pbWFnZU1vZ3IyL3RodW1ibmFpbC8xODAuMHgxODAuMA==/gravity/southeast/dx/20.0/dy/20.0)</td>
+                    </tr>
+                    
+                    <tr>
+                        <td>1737993600.0</td>
+                        <td>184 Ishowspeed Photos &amp; High-Res Pictures</td>
+                        <td>![IShowSpeed attends the 2023 Streamy Awards at Fairmont Century Plaza on August 27, 2023 in Los Angeles, California.](https://media.gettyimages.com/id/1643293731/photo/los-angeles-california-ishowspeed-attends-the-2023-streamy-awards-at-fairmont-century-plaza.jpg?s=612x612&amp;w=gi&amp;k=20&amp;c=FFfkMcKlTjlYRbvH2lj08St4wkR8pu7FbjQe71sP25o=)</td>
+                    </tr>
+                    
+                    <tr>
+                        <td>1729180800.0</td>
+                        <td>How IShowSpeed Took Over the Internet at Lightning Speed | Brand Vision</td>
+                        <td>TikTok’s bite-sized, rapid-consumption format was perfect for Speed’s high-energy moments.
+Fans clip his wildest reactions, funniest rants, or craziest fails, and boom—instant viral content.
+His memes spread across Twitter, Instagram, and TikTok at the speed of light, creating a massive snowball effect.
+Once people saw one Speed clip, they’d head over to his YouTube or stream to see more.
+This cross-platform exposure skyrocketed his subscriber count and built up his fanbase incredibly quickly.</td>
+                    </tr>
+                    
+                    <tr>
+                        <td>1743868800.0</td>
+                        <td>IShowSpeed袭港，Coffee林芊妤惊讶6岁儿子都识︰真系跟得好贴_手机网易网</td>
+                        <td>IShowSpeed频道直播甲亢哥到湾仔鹅颈桥打小心经过。（IShowSpeed Youtube截图）
+![](http://dingyue.ws.126.net/2025/0406/55fbb3e8j00su9fac001kd000u000fbm.jpg)
+打开网易新闻 查看精彩图片
+甲亢哥乘坐海洋公园缆车。（IShowSpeed Youtube截图）
+![](http://dingyue.ws.126.net/2025/0406/17e568aaj00su9fac001sd000u000gvm.jpg)
+打开网易新闻 查看精彩图片
+美国YouTuber IShowSpeed在尖沙咀码头登船，大批粉丝聚集并不断高呼“Speed!”，又举起手机拍照。（吴绰诗摄）
+![](http://dingyue.ws.126.net/2025/0406/f524304bj00su9fac000wd000u0009wm.jpg)
+打开网易新闻 查看精彩图片</td>
+                    </tr>
+                    
+                    <tr>
+                        <td>1750003200.0</td>
+                        <td>IShowSpeed races fitness influencer Ashton Hall and former world champion Devin Haney</td>
+                        <td>ADVERTISEMENT
+Article continues below this ad
+Competing barefoot on grass over a 50-yard dash, Speed won the first race, followed by three more victories, sweeping the event 4-0.
+While initially the pair clashed over who had actually won, the fitness influencer later admitted Speed beat him fair and square, suggesting he just “got caught in the sauce.”
+Regardless, since then, Devin Haney seems to be in the mood for some social media attention, as he challenged Speed to a race.
+“I wanna race speed..
+I could beat him fasho,” Haney wrote on X.
+&gt; I wanna race speed..
+I could beat him fasho
+&gt; — Devin Haney (@Realdevinhaney) June 14, 2025</td>
+                    </tr>
+                    
+                    <tr>
+                        <td>1640966400.0</td>
+                        <td>ishow speed阳光彩虹小白马</td>
+                        <td>| 14 | ![](http://lf-organic-growth.bytecdn.cn/obj/growth-seo-cdn/seo-page/static/media/like.f46dc95d.png) | Porradão VIP | IShowSpeed | Trip 2 Brazil | 02:46 | ![](http://lf-organic-growth.bytecdn.cn/obj/growth-seo-cdn/seo-page/static/media/dots.202b8fc3.png) |
+| 15 | ![](http://lf-organic-growth.bytecdn.cn/obj/growth-seo-cdn/seo-page/static/media/like.f46dc95d.png) | Portuginies VIP | IShowSpeed | Portuginies | 02:54 | ![](http://lf-organic-growth.bytecdn.cn/obj/growth-seo-cdn/seo-page/static/media/dots.202b8fc3.png) |</td>
+                    </tr>
+                    
+                    <tr>
+                        <td>1525104000.0</td>
+                        <td>IShowSpeed Twitch Stats Summary</td>
+                        <td>2023
+Jan
+Feb
+Mar
+Apr
+May
+Jun
+Jul
+Aug
+Sep
+Oct
+Nov
+Dec
+2022
+Jan
+Feb
+Mar
+Apr
+May
+Jun
+Jul
+Aug
+Sep
+Oct
+Nov
+Dec
+2021
+Jan
+Feb
+Mar
+Apr
+May
+Jun
+Jul
+Aug
+Sep
+Oct
+Nov
+Dec
+2020
+Aug
+Sep
+Oct
+Nov
+Dec
+Last online:
+&gt; 30 days
+Follower rank:
+0
+(0)
+Follower gain rank:
+0
+(0)
+Peak viewer rank:
+0
+(0)
+Average viewer rank:
+0
+(0)
+View rank:
+0
+(0)
+View gain rank:
+0
+(0)
+*Data for channels this size may be incomplete
+Average viewers
+0
+Hours watched
+0
+Followers gained
+0
+Peak viewers
+0
+Hours streamed
+0
+Streams
+0
+IShowSpeed has been watched for over</td>
+                    </tr>
+                    
+                    <tr>
+                        <td>1672675200.0</td>
+                        <td>iShowSpeed看自己在比赛中高光时刻_哔哩哔哩bilibili</td>
+                        <td>为啥speed说话这么难懂，speed和女生聊天，互相听不懂，加密通话中
+国外小哥看功夫，直言比看过的所有漫威都好看 part3 大结局
+speed和好兄弟adin打起来了，原因是adin语音骂speed妈妈B**
+speed再连中国人现场演唱小白马，寻问我有冰淇淋是什么意思
+Ishowspeed直播《生化危机8：村庄》完整版
+来自印度的死亡助眠，助眠界的泥石流，油管网红
+speed被人掌锢，被打出狗叫
+speed(甲亢哥)直播挑战世界上最辣的坚果，直接吃哭了
+三姐妹时隔两年再次看功夫，发现百看不厌的好电影 part5 大结局
+国外小伙看少林足球，直呼笑得脸都开始痛了 2</td>
+                    </tr>
+                    
+                    </tbody>
+                </table>
+                
+            </div>
+
+            <!-- Sources -->
+            <div class="tab-content" data-tab="sources">
+                
+                <ul class="sources-list">
+                    
+                    <li class="source-item">
+                        
+                        <a class="source-link" href="https://new.qq.com/rain/a/20250414A0238C00" target="_blank">
+                            Youtube超级网红IShowSpeed于3月24日落地中国上海，开始17天8城的实时直播之旅
+                        </a>
+                        
+                    </li>
+                    
+                    <li class="source-item">
+                        
+                        <a class="source-link" href="https://www.bilibili.com/video/BV1mDNJeMECy" target="_blank">
+                            IShowSpeed rat dance: TikTok · IShowSpeed
+                        </a>
+                        
+                    </li>
+                    
+                    <li class="source-item">
+                        
+                        <a class="source-link" href="https://www.sohu.com/a/881637713_100298852" target="_blank">
+                            海外社媒千万粉丝顶流网红IShowSpeed（以下简称Speed）自3月24日起开启中国行
+                        </a>
+                        
+                    </li>
+                    
+                    <li class="source-item">
+                        
+                        <a class="source-link" href="https://www.21jingji.com/article/20250405/herald/18ac456895ed010e132a267980df9137.html" target="_blank">
+                            International Internet Sensation iShowSpeed Started Live-streaming in Shenzhen
+                        </a>
+                        
+                    </li>
+                    
+                    <li class="source-item">
+                        
+                        <a class="source-link" href="https://m.sohu.com/a/878468654_122178616/" target="_blank">
+                            IShowSpeed（以下简称Speed）
+                        </a>
+                        
+                    </li>
+                    
+                    <li class="source-item">
+                        
+                        <a class="source-link" href="https://m.163.com/news/article/JSIIBCUN0516DPPV.html" target="_blank">
+                            How IShowSpeed Became A Global Phenomenon
+                        </a>
+                        
+                    </li>
+                    
+                    <li class="source-item">
+                        
+                        <a class="source-link" href="https://socialcounts.org/youtube-live-subscriber-count/UCWsDFcIhY2DBi3GB5uykGXA" target="_blank">
+                            IShowSpeed youtube channel stats
+                        </a>
+                        
+                    </li>
+                    
+                    <li class="source-item">
+                        
+                        <a class="source-link" href="https://m.tmtpost.com/7533850.html" target="_blank">
+                            文 | 新声Pro
+                        </a>
+                        
+                    </li>
+                    
+                    <li class="source-item">
+                        
+                        <a class="source-link" href="https://eastweek.stheadline.com/column/culture/103608/IShowSpeed%E5%8F%8A%E6%B7%B7%E6%B2%8C%E5%B0%91%E5%B9%B4%E6%99%82-%E8%B6%99%E9%BA%97%E5%A6%82" target="_blank">
+                            網絡熱烘烘在談論Netflix上架的英國犯罪迷你劇集（Adolescence）（中譯《混沌少年時》）
+                        </a>
+                        
+                    </li>
+                    
+                    <li class="source-item">
+                        
+                        <a class="source-link" href="https://bitsounisproject.com/zh-CN/%E5%87%80%E5%80%BC/%E6%98%BE%E7%A4%BA%E9%80%9F%E5%BA%A6/" target="_blank">
+                            IShowSpeed 是谁？他赚多少钱？
+                        </a>
+                        
+                    </li>
+                    
+                    <li class="source-item">
+                        
+                        <a class="source-link" href="https://thefanmail.com/ishowspeed/" target="_blank">
+                            The Fanmail
+                        </a>
+                        
+                    </li>
+                    
+                    <li class="source-item">
+                        
+                        <a class="source-link" href="https://www.jiuzyoung.com/latest/who-is-ishowspeed/" target="_blank">
+                            IShowSpeed风靡大马！一起来看看他到底是谁？
+                        </a>
+                        
+                    </li>
+                    
+                    <li class="source-item">
+                        
+                        <a class="source-link" href="https://hn.rednet.cn/content/646948/99/14851116.html" target="_blank">
+                            IShowSpeed现身长沙
+                        </a>
+                        
+                    </li>
+                    
+                    <li class="source-item">
+                        
+                        <a class="source-link" href="https://www.gettyimages.com/photos/ishowspeed" target="_blank">
+                            184 Ishowspeed Photos &amp; High-Res Pictures
+                        </a>
+                        
+                    </li>
+                    
+                    <li class="source-item">
+                        
+                        <a class="source-link" href="https://www.brandvm.com/post/how-ishowspeed-took-over-the-internet-at-lightning-speed" target="_blank">
+                            How IShowSpeed Took Over the Internet at Lightning Speed | Brand Vision
+                        </a>
+                        
+                    </li>
+                    
+                    <li class="source-item">
+                        
+                        <a class="source-link" href="https://m.163.com/dy/article/JSEB184R05563X74.html" target="_blank">
+                            IShowSpeed袭港，Coffee林芊妤惊讶6岁儿子都识︰真系跟得好贴_手机网易网
+                        </a>
+                        
+                    </li>
+                    
+                    <li class="source-item">
+                        
+                        <a class="source-link" href="https://www.essentiallysports.com/boxing-news-boxing-champ-challenges-ishowspeed-after-ashton-hall-race/" target="_blank">
+                            IShowSpeed races fitness influencer Ashton Hall and former world champion Devin Haney
+                        </a>
+                        
+                    </li>
+                    
+                    <li class="source-item">
+                        
+                        <a class="source-link" href="https://www.douyin.com/qishui/playlist/7472220628683851812" target="_blank">
+                            ishow speed阳光彩虹小白马
+                        </a>
+                        
+                    </li>
+                    
+                    <li class="source-item">
+                        
+                        <a class="source-link" href="https://sullygnome.com/channel/ishowspeed#%3A~%3Atext%3DIShowSpeed%20Summary%20stats%20over%20the%20past%207%20days%26text%3DIShowSpeed%20has%20been%20watched%20for%2C65%2C704%20so%20far%20this%20year." target="_blank">
+                            IShowSpeed Twitch Stats Summary
+                        </a>
+                        
+                    </li>
+                    
+                    <li class="source-item">
+                        
+                        <a class="source-link" href="https://www.bilibili.com/video/BV1w84y1e7LM" target="_blank">
+                            iShowSpeed看自己在比赛中高光时刻_哔哩哔哩bilibili
+                        </a>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+        </div>
+        
+        <div class="topic-content" data-index="1">
+            <!-- Tabs -->
+            <div class="tabs">
+                <div class="tab active" data-tab="sub-themes">Sub-themes</div>
+                <div class="tab" data-tab="entities">Entities</div>
+                <div class="tab" data-tab="chronological">Chronological Summary</div>
+                <div class="tab" data-tab="sources">Sources</div>
+            </div>
+
+            <!-- Sub-themes -->
+            <div class="tab-content active" data-tab="sub-themes">
+                
+                <p>No sub-themes available.</p>
+                
+            </div>
+
+            <!-- Entities -->
+            <div class="tab-content" data-tab="entities">
+                
+                <p>No entities available.</p>
+                
+            </div>
+
+            <!-- Chronological Summary -->
+            <div class="tab-content" data-tab="chronological">
+                
+                <table>
+                    <thead>
+                    <tr>
+                        <th>Time</th>
+                        <th>Event</th>
+                        <th>Summary</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    
+                    <tr>
+                        <td>1763754083.0</td>
+                        <td>Cher, Lindsay Lohan and Marilyn Monroe to Be Featured in Journalist Scott Huver&#39;s Second &#39;Beverly Hills Noir&#39; True-Crime Book (EXCLUSIVE)</td>
+                        <td>Veteran entertainment journalist Scott Huver has signed a deal for a second installment of his Los Angeles crime anthology book series.</td>
+                    </tr>
+                    
+                    <tr>
+                        <td>1763752565.0</td>
+                        <td>I Asked ChatGPT If There Are Any Ways To Get Rich Quick That Actually Work</td>
+                        <td>The LLM provided surprisingly level-headed answers when asked how to make a lot of money quickly, and surprise! Not one mention of cryptocurrency in sight.</td>
+                    </tr>
+                    
+                    <tr>
+                        <td>1763749874.0</td>
+                        <td>Mental Health and Physical Health with William Tillman, M.D.</td>
+                        <td>MOBILE, Ala. (WKRG) — William Tillman, M.D. from Accordia Health, joined WKRG on The Doctor is In to discuss the impacts that mental health can have on physical health.</td>
+                    </tr>
+                    
+                    <tr>
+                        <td>1763747298.0</td>
+                        <td>How WSU DC Jesse Bobbit built one of the nation&#39;s finest defenses</td>
+                        <td>PULLMAN – Jesse Bobbit squints and looks out of his office window, a fifth-floor perch with a picturesque view of Gesa Field, where his Washington State defense has been dominant this season.</td>
+                    </tr>
+                    
+                    <tr>
+                        <td>1763743876.0</td>
+                        <td>Tech News: KPMG hails ISO 42001 certification</td>
+                        <td>Plus, Schellman becomes the first U.S.-based body for MTCS certification; Intuit launches partnerships with Cherry Bekaert, Rehmann; and other accounting tech news and updates from the week.</td>
+                    </tr>
+                    
+                    </tbody>
+                </table>
+                
+            </div>
+
+            <!-- Sources -->
+            <div class="tab-content" data-tab="sources">
+                
+                <ul class="sources-list">
+                    
+                    <li class="source-item">
+                        
+                        <a class="source-link" href="https://variety.com/2025/biz/columns/cher-lindsay-lohan-scott-huver-beverly-hills-noir-true-crime-book-1236588494/" target="_blank">
+                            Cher, Lindsay Lohan and Marilyn Monroe to Be Featured in Journalist Scott Huver&#39;s Second &#39;Beverly Hills Noir&#39; True-Crime Book (EXCLUSIVE)
+                        </a>
+                        
+                    </li>
+                    
+                    <li class="source-item">
+                        
+                        <a class="source-link" href="https://www.gobankingrates.com/money/making-money/i-asked-chatgpt-ways-to-get-rich-quick-actually-work/" target="_blank">
+                            I Asked ChatGPT If There Are Any Ways To Get Rich Quick That Actually Work
+                        </a>
+                        
+                    </li>
+                    
+                    <li class="source-item">
+                        
+                        <a class="source-link" href="https://www.wkrg.com/the-doctor-is-in/mental-health-and-physical-health-with-william-tillman-m-d/" target="_blank">
+                            Mental Health and Physical Health with William Tillman, M.D.
+                        </a>
+                        
+                    </li>
+                    
+                    <li class="source-item">
+                        
+                        <a class="source-link" href="https://www.spokesman.com/stories/2025/nov/20/how-wsu-dc-jesse-bobbit-built-one-of-the-nations-f/" target="_blank">
+                            How WSU DC Jesse Bobbit built one of the nation&#39;s finest defenses
+                        </a>
+                        
+                    </li>
+                    
+                    <li class="source-item">
+                        
+                        <a class="source-link" href="https://www.accountingtoday.com/list/tech-news-kpmg-hails-iso-42001-certification" target="_blank">
+                            Tech News: KPMG hails ISO 42001 certification
+                        </a>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+        </div>
+        
+        
+    </div>
+</div>
+
+<script>
+    // Tabs inside each topic
+    document.querySelectorAll('.topic-content').forEach(function(topicEl) {
+        const tabs = topicEl.querySelectorAll('.tab');
+        const contents = topicEl.querySelectorAll('.tab-content');
+
+        tabs.forEach(function(tab) {
+            tab.addEventListener('click', function () {
+                const tabName = tab.getAttribute('data-tab');
+
+                tabs.forEach(function (t) { t.classList.remove('active'); });
+                contents.forEach(function (c) { c.classList.remove('active'); });
+
+                tab.classList.add('active');
+                const target = topicEl.querySelector('.tab-content[data-tab="' + tabName + '"]');
+                if (target) {
+                    target.classList.add('active');
+                }
+            });
+        });
+    });
+
+    // Switch visible topic when clicking sidebar
+    const queryItems = document.querySelectorAll('.query-item');
+    const topicBlocks = document.querySelectorAll('.topic-content');
+
+    queryItems.forEach(function (item) {
+        item.addEventListener('click', function () {
+            const index = item.getAttribute('data-index');
+
+            // sidebar highlight
+            queryItems.forEach(function (q) { q.classList.remove('active'); });
+            item.classList.add('active');
+
+            // show the matching topic block
+            topicBlocks.forEach(function (block) {
+                if (block.getAttribute('data-index') === index) {
+                    block.classList.add('active');
+                } else {
+                    block.classList.remove('active');
+                }
+            });
+        });
+    });
+</script>
+</body>
+</html>
