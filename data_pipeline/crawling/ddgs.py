@@ -19,6 +19,8 @@ class DDGS(Retriever):
     Output is stored into DataManager as Webpage objects.
     """
 
+    name = "DuckDuckGo"
+
     def __init__(
         self,
         query: str,

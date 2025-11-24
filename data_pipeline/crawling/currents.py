@@ -41,6 +41,7 @@ class CurrentsAPI(Retriever):
     Output is stored into DataManager as Webpage objects.
     """
 
+    name = "CurrentsAPI"
     BASE_URL = "https://api.currentsapi.services/v1"
 
     def __init__(

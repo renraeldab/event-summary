@@ -17,6 +17,8 @@ def _chinese_date_to_timestamp(date_str: str) -> float | None:
 class Metaso(Retriever):
     """https://metaso.cn/search-api/playground"""
 
+    name="metaso"
+
     def __init__(
         self,
         api_key: str,
