@@ -40,7 +40,7 @@ if __name__ == "__main__":
     if currents_api_key:
         retrievers.append(CurrentsAPI(currents_api_key, query, data_manager))
     if openai_model and (openai_base_url is not None or openai_api_key is not None):
-        client = OpenAICompatible(openai_base_url, openai_api_key, openai_model, 2)
+        client = OpenAICompatible(openai_base_url, openai_api_key, openai_model, max_concurrent=2)
         processors.append(BaselineExtractor(query, data_manager, client))
         processors.append(BaselineGenerator(query, data_manager, client))
     
