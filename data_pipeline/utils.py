@@ -1,5 +1,6 @@
 import asyncio
 import openai
+from openai.types.chat import ChatCompletion
 
 
 class OpenAICompatible:
@@ -11,7 +12,7 @@ class OpenAICompatible:
         self,
         base_url: str | None,
         api_key: str | None,
-        model: str | None = None,
+        model: str,
         max_concurrent: int = 1
     ):
         self.client = openai.AsyncOpenAI(
@@ -21,8 +22,6 @@ class OpenAICompatible:
         self.semaphore = asyncio.Semaphore(max_concurrent)
         self.model = model
 
-    async def chat_completions(self, messages: list[dict], model: str | None = None, **kwargs):
-        if model is None and self.model is None:
-            raise ValueError("Model is None.")
+    async def chat_completions(self, messages: list[dict], **kwargs) -> ChatCompletion:
         async with self.semaphore:
             return await self.client.chat.completions.create(messages=messages, model=self.model, **kwargs)
