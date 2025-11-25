@@ -2,6 +2,23 @@
 
 A data pipeline that automatically crawls information about a specific event or topic and generates a structured summary webpage.
 
+## Asynchronous Architecture
+
+- **Producer-Consumer Pattern**
+    - Decouple data acquisition from processing
+    - **Producers**: `Retriever` instances fetch webpages and enqueue URLs into queues
+    - **Consumers**: `Processor` instances consume URLs from queues for batch processing
+    - Configurable consumption batch size
+
+- **Dual-Queue**
+    - Enable independent scaling of entity extraction and theme generation workloads
+    - Progress tracking via tqdm bars synchronized with queue operations
+
+- **Controlled Concurrency**
+    - Retriever fetching concurrency
+    - Processor parallelism
+    - LLM concurrency
+
 ## Project Structure
 
 ```
@@ -13,6 +30,10 @@ event-summary/
 ├── .env.example
 ├── LICENSE
 ├── README.md
+├── tests/
+│   ├── ...
+├── data/
+│   ├── ...
 ├── data_pipeline/
 │   ├── __init__.py
 │   ├── __main__.py
@@ -26,7 +47,7 @@ event-summary/
 └── html_generator/
     ├── __init__.py
     ├── __main__.py
-    └── ...
+    └── template.html
 ```
 
 ## Environment
