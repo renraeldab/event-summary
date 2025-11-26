@@ -8,6 +8,18 @@ TEMPLATE_DIR = Path(__file__).resolve().parent
 DATA_DIR = TEMPLATE_DIR.parent / "data"
 
 
+def sort_entities(entities: list[dict]) -> list[dict]:
+    """Group and sort entities."""
+    entity_types = ("Person", "Creature", "Organization", "Location", "Event", "Concept", "Method", "Artifact")
+    sorted_entities = []
+    for entity_type in entity_types:
+        _entities = [entity for entity in entities if entity["type"] == entity_type]
+        if entity_type == "Event":
+            _entities.sort(key=lambda e: e["time"])
+        sorted_entities.extend(_entities)
+    return sorted_entities
+
+
 def load_json_data() -> list:
     """Load all JSON files from the data directory."""
     data = []
@@ -22,6 +34,7 @@ def load_json_data() -> list:
                 "query": json_file.stem,
                 "output": json.load(f)
             })
+        data[-1]["output"]["entities"] = sort_entities(data[-1]["output"]["entities"])
     return data
 
 
